@@ -18,14 +18,14 @@ commands:
   quests:
     description: default player command
     aliases:
-      - quest
+      - dailyquest
   questsadmin:
     description: admin command
     aliases:
-      - questadmin
-      - qadmin
+      - dailyquestadmin
+      - dqadmin
   questsreload:
     description: reload command
     aliases:
-      - questreload
-      - qreload
+      - dailyquestreload
+      - dqreload

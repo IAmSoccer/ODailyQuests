@@ -32,7 +32,7 @@ public class PlayerCommands implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("quests")) {
+        if (command.getName().equalsIgnoreCase("dailyquests")) {
             if (sender instanceof Player) {
                 if (sender.hasPermission(QuestsPermissions.QUEST_USE.getPermission())) {
                     if (args.length >= 1) {

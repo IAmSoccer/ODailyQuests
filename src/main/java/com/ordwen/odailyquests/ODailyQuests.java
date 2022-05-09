@@ -183,12 +183,12 @@ public final class ODailyQuests extends JavaPlugin {
             logger.info(ChatColor.YELLOW + "PlaceholderAPI" + ChatColor.GOLD + " not detected. Placeholders will not work.");
 
         /* Load commands */
-        getCommand("quests").setExecutor(new PlayerCommands(configurationFiles, globalQuestsInterface, categorizedQuestsInterfaces));
-        getCommand("questsadmin").setExecutor(new AdminCommands(this));
+        getCommand("dailyquests").setExecutor(new PlayerCommands(configurationFiles, globalQuestsInterface, categorizedQuestsInterfaces));
+        getCommand("dailyquestsadmin").setExecutor(new AdminCommands(this));
 
         /* Load Tab Completers */
-        getCommand("quests").setTabCompleter(new PlayerCompleter());
-        getCommand("questsadmin").setTabCompleter(new AdminCompleter());
+        getCommand("dailyquests").setTabCompleter(new PlayerCompleter());
+        getCommand("dailyquestsadmin").setTabCompleter(new AdminCompleter());
 
         /* Load listeners */
         getServer().getPluginManager().registerEvents(new ValidateVillagerTradeQuest(), this);

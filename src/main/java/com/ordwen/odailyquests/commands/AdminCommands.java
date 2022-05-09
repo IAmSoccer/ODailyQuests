@@ -31,7 +31,7 @@ public class AdminCommands implements CommandExecutor {
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("questsadmin")) {
+        if (command.getName().equalsIgnoreCase("dailyquestsadmin")) {
             if (sender.hasPermission(QuestsPermissions.QUESTS_ADMIN.getPermission())) {
                 if (args.length == 1) {
                     switch (args[0]) {
