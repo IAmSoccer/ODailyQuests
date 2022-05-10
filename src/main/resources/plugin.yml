@@ -15,16 +15,16 @@ softdepend:
 loadbefore:
   - Vault
 commands:
-  quests:
+  dailyquests:
     description: default player command
     aliases:
       - dailyquest
-  questsadmin:
+  dailyquestsadmin:
     description: admin command
     aliases:
       - dailyquestadmin
       - dqadmin
-  questsreload:
+  dailyquestsreload:
     description: reload command
     aliases:
       - dailyquestreload
