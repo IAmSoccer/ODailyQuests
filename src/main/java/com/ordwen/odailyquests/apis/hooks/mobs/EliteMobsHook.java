@@ -1,4 +1,4 @@
-package com.ordwen.odailyquests.apis;
+package com.ordwen.odailyquests.apis.hooks.mobs;
 
 import com.magmaguy.elitemobs.api.EliteMobDeathEvent;
 import com.ordwen.odailyquests.quests.QuestType;
@@ -7,7 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-public class EliteMobsAPI implements Listener {
+public class EliteMobsHook implements Listener {
 
     /**
      * Check if EliteMobs is enabled.

@@ -2,13 +2,10 @@ package com.ordwen.odailyquests.commands.interfaces.pagination;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import com.ordwen.odailyquests.commands.interfaces.PlayerQuestsInterface;
 import com.ordwen.odailyquests.files.ConfigurationFiles;
-import com.ordwen.odailyquests.quests.player.QuestsManager;
 import com.ordwen.odailyquests.tools.ColorConvert;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -32,17 +29,17 @@ public class Items {
     /* init items */
     private static ItemStack previous;
     private static ItemStack next;
+    private static final HashSet<ItemStack> paginationItems = new HashSet<>();
 
-    private static ItemStack playerHead;
-    private static SkullMeta skullMeta;
 
     /**
      * Load all items.
      */
     public void initItems() {
+        paginationItems.clear();
+
         initPreviousButton();
         initNextButton();
-        initPlayerHead();
     }
 
     /**
@@ -70,6 +67,8 @@ public class Items {
 
         previousMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces").getString(".previous_item_name"))));
         previous.setItemMeta(previousMeta);
+
+        paginationItems.add(previous);
     }
 
     /**
@@ -97,16 +96,8 @@ public class Items {
 
         nextMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces").getString(".next_item_name"))));
         next.setItemMeta(nextMeta);
-    }
 
-    /**
-     * Init player head.
-     */
-    private void initPlayerHead() {
-        playerHead = new ItemStack(Material.PLAYER_HEAD, 1);
-        skullMeta = (SkullMeta) playerHead.getItemMeta();
-        skullMeta.setDisplayName(ChatColor.translateAlternateColorCodes('&',
-                ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces.player_quests.player_head").getString(".item_name"))));
+        paginationItems.add(next);
     }
 
     /**
@@ -128,23 +119,10 @@ public class Items {
     }
 
     /**
-     * Get player head.
-     *
-     * @return player head.
+     * Get pagination items.
+     * @return set of pagination items
      */
-    public static ItemStack getPlayerHead(Player player) {
-
-        skullMeta.setOwnerProfile(player.getPlayerProfile());
-
-        List<String> itemDesc = configurationFiles.getConfigFile().getConfigurationSection("interfaces.player_quests.player_head").getStringList(".item_description");
-        for (String string : itemDesc) {
-            itemDesc.set(itemDesc.indexOf(string), ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(string)
-                    .replace("%achieved%", String.valueOf(QuestsManager.getActiveQuests().get(player.getName()).getAchievedQuests()))
-                    .replace("%drawIn%", PlayerQuestsInterface.timeRemain(player.getName()))));
-        }
-
-        skullMeta.setLore(itemDesc);
-        playerHead.setItemMeta(skullMeta);
-        return playerHead;
+    public static HashSet<ItemStack> getPaginationItems() {
+        return paginationItems;
     }
 }

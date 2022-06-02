@@ -1,64 +1,63 @@
 package com.ordwen.odailyquests.rewards;
 
-import com.ordwen.odailyquests.apis.PlayerPoints;
-import com.ordwen.odailyquests.apis.TokenManagerAPI;
-import com.ordwen.odailyquests.apis.VaultAPI;
+import com.ordwen.odailyquests.apis.hooks.points.PlayerPointsHook;
+import com.ordwen.odailyquests.apis.hooks.points.TokenManagerHook;
+import com.ordwen.odailyquests.apis.hooks.eco.VaultHook;
+import com.ordwen.odailyquests.configuration.functionalities.Actionbar;
+import com.ordwen.odailyquests.configuration.functionalities.Title;
 import com.ordwen.odailyquests.enums.QuestsMessages;
-import com.ordwen.odailyquests.files.ConfigurationFiles;
+import com.ordwen.odailyquests.tools.PluginLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.PluginLogger;
-
-import java.util.Objects;
-import java.util.logging.Logger;
+import org.bukkit.entity.Player;
 
 public class RewardManager {
 
-    /* Logger for stacktrace */
-    private static final Logger logger = PluginLogger.getLogger("O'DailyQuests");
+    public static void sendAllRewardItems(String questName, String playerName, Reward reward) {
+        Player player = Bukkit.getPlayer(playerName);
 
-    private final ConfigurationFiles configurationFiles;
-
-    public RewardManager(ConfigurationFiles configurationFiles) {
-        this.configurationFiles = configurationFiles;
+        player.sendMessage(QuestsMessages.QUEST_ACHIEVED.toString().replace("%questName%", questName));
+        Title.sendTitle(player, questName);
+        Actionbar.sendActionbar(player, questName);
+        sendQuestReward(player, reward);
     }
 
     /**
      * Give quest-reward to player.
      *
-     * @param playerName name of player to give the reward.
+     * @param player to give the reward.
      * @param reward     quest reward.
      */
-    public static void sendQuestReward(String playerName, Reward reward) {
+    public static void sendQuestReward(Player player, Reward reward) {
         switch (reward.getRewardType()) {
             case COMMAND:
                 for (String cmd : reward.getRewardCommands()) {
-                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", playerName));
+                    Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), cmd.replace("%player%", player.getName()));
                 }
-                Objects.requireNonNull(Bukkit.getPlayer(playerName)).sendMessage(QuestsMessages.REWARD_COMMAND.toString());
+                player.sendMessage(QuestsMessages.REWARD_COMMAND.toString());
                 break;
             case EXP_LEVELS:
-                Objects.requireNonNull(Bukkit.getPlayer(playerName)).giveExpLevels(reward.getRewardAmount());
-                Objects.requireNonNull(Bukkit.getPlayer(playerName)).sendMessage(QuestsMessages.REWARD_EXP_LEVELS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
+                player.giveExpLevels(reward.getRewardAmount());
+                player.sendMessage(QuestsMessages.REWARD_EXP_LEVELS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
                 break;
             case EXP_POINTS:
-                Objects.requireNonNull(Bukkit.getPlayer(playerName)).giveExp(reward.getRewardAmount());
-                Objects.requireNonNull(Bukkit.getPlayer(playerName)).sendMessage(QuestsMessages.REWARD_EXP_POINTS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
+                player.giveExp(reward.getRewardAmount());
+                player.sendMessage(QuestsMessages.REWARD_EXP_POINTS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
                 break;
             case MONEY:
-                VaultAPI.getEconomy().depositPlayer(Bukkit.getPlayer(playerName), reward.getRewardAmount());
-                Objects.requireNonNull(Bukkit.getPlayer(playerName)).sendMessage(QuestsMessages.REWARD_MONEY.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
+                VaultHook.getEconomy().depositPlayer(player, reward.getRewardAmount());
+                player.sendMessage(QuestsMessages.REWARD_MONEY.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
                 break;
             case POINTS:
-                if (TokenManagerAPI.getTokenManagerAPI() != null) {
-                    TokenManagerAPI.getTokenManagerAPI().addTokens(Bukkit.getPlayer(playerName), reward.getRewardAmount());
-                    Bukkit.getPlayer(playerName).sendMessage(QuestsMessages.REWARD_POINTS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
-                } else if (PlayerPoints.isPlayerPointsSetup()) {
-                    PlayerPoints.getPlayerPointsAPI().give(Bukkit.getPlayer(playerName).getUniqueId(), reward.getRewardAmount());
-                    Bukkit.getPlayer(playerName).sendMessage(QuestsMessages.REWARD_POINTS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
+                if (TokenManagerHook.getTokenManagerAPI() != null) {
+                    TokenManagerHook.getTokenManagerAPI().addTokens(player, reward.getRewardAmount());
+                    player.sendMessage(QuestsMessages.REWARD_POINTS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
+                } else if (PlayerPointsHook.isPlayerPointsSetup()) {
+                    PlayerPointsHook.getPlayerPointsAPI().give(player.getUniqueId(), reward.getRewardAmount());
+                    player.sendMessage(QuestsMessages.REWARD_POINTS.toString().replace("%rewardAmount%", String.valueOf(reward.getRewardAmount())));
                 } else {
-                    logger.info(ChatColor.RED + "Impossible to give reward to " + ChatColor.GOLD + playerName + ChatColor.RED + ".");
-                    logger.info(ChatColor.RED + "Reward type is " + reward.getRewardType().getRewardTypeName() + " but TokenManager is not hooked.");
+                    PluginLogger.info(ChatColor.RED + "Impossible to give reward to " + ChatColor.GOLD + player.getName() + ChatColor.RED + ".");
+                    PluginLogger.info(ChatColor.RED + "Reward type is " + reward.getRewardType().getRewardTypeName() + " but TokenManager is not hooked.");
                 }
         }
     }

@@ -1,9 +1,9 @@
-package com.ordwen.odailyquests.apis;
+package com.ordwen.odailyquests.apis.hooks.points;
 
 import me.realized.tokenmanager.api.TokenManager;
 import org.bukkit.Bukkit;
 
-public class TokenManagerAPI {
+public class TokenManagerHook {
 
     private static TokenManager tokenManagerAPI;
 

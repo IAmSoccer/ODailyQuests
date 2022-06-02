@@ -4,17 +4,17 @@ import com.ordwen.odailyquests.commands.interfaces.pagination.Items;
 import com.ordwen.odailyquests.files.ConfigurationFiles;
 import com.ordwen.odailyquests.quests.LoadQuests;
 import com.ordwen.odailyquests.quests.Quest;
+import com.ordwen.odailyquests.tools.PluginLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.PluginLogger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class CategorizedQuestsInterfaces {
 
@@ -31,11 +31,9 @@ public class CategorizedQuestsInterfaces {
         this.configurationFiles = configurationFiles;
     }
 
-    /* Logger for stacktrace */
-    private final Logger logger = PluginLogger.getLogger("O'DailyQuests");
-
     /* init items */
-    float invSize = 45;
+    private final float invSize = 45;
+    private static final List<ItemStack> emptyCaseItems = new ArrayList<>();
     List<Inventory> easyQuestsInventories = new ArrayList<>();
     List<Inventory> mediumQuestsInventories = new ArrayList<>();
     List<Inventory> hardQuestsInventories = new ArrayList<>();
@@ -44,20 +42,23 @@ public class CategorizedQuestsInterfaces {
      * Load all categorized interfaces.
      */
     public void loadCategorizedInterfaces() {
+        /* Init empty case items */
+        ItemStack easyEmptyCaseItem = new ItemStack(Material.valueOf(configurationFiles.getConfigFile().getConfigurationSection("interfaces.easy_quests").getString(".empty_item")));
+        ItemStack mediumEmptyCaseItem = new ItemStack(Material.valueOf(configurationFiles.getConfigFile().getConfigurationSection("interfaces.medium_quests").getString(".empty_item")));
+        ItemStack hardEmptyCaseItem = new ItemStack(Material.valueOf(configurationFiles.getConfigFile().getConfigurationSection("interfaces.hard_quests").getString(".empty_item")));
+        emptyCaseItems.addAll(Arrays.asList(easyEmptyCaseItem, mediumEmptyCaseItem, hardEmptyCaseItem));
+
         /* Easy quests inventory */
-        ItemStack emptyCaseItem = new ItemStack(Material.valueOf(configurationFiles.getConfigFile().getConfigurationSection("interfaces.easy_quests").getString(".empty_item")));
         int neededInventories = (int) Math.ceil(LoadQuests.getEasyQuests().size() / invSize);
-        loadSelectedInterface(InterfacesManager.getEasyQuestsInventoryName(), emptyCaseItem, neededInventories, easyQuestsInventories, LoadQuests.getEasyQuests());
+        loadSelectedInterface(InterfacesManager.getEasyQuestsInventoryName(), easyEmptyCaseItem, neededInventories, easyQuestsInventories, LoadQuests.getEasyQuests());
 
         /* Medium quests inventory */
-        emptyCaseItem = new ItemStack(Material.valueOf(configurationFiles.getConfigFile().getConfigurationSection("interfaces.medium_quests").getString(".empty_item")));
         neededInventories = (int) Math.ceil(LoadQuests.getMediumQuests().size() / invSize);
-        loadSelectedInterface(InterfacesManager.getMediumQuestsInventoryName(), emptyCaseItem, neededInventories, mediumQuestsInventories, LoadQuests.getMediumQuests());
+        loadSelectedInterface(InterfacesManager.getMediumQuestsInventoryName(), mediumEmptyCaseItem, neededInventories, mediumQuestsInventories, LoadQuests.getMediumQuests());
 
         /* Hard quests inventory */
-        emptyCaseItem = new ItemStack(Material.valueOf(configurationFiles.getConfigFile().getConfigurationSection("interfaces.hard_quests").getString(".empty_item")));
         neededInventories = (int) Math.ceil(LoadQuests.getHardQuests().size() / invSize);
-        loadSelectedInterface(InterfacesManager.getHardQuestsInventoryName(), emptyCaseItem, neededInventories, hardQuestsInventories, LoadQuests.getHardQuests());
+        loadSelectedInterface(InterfacesManager.getHardQuestsInventoryName(), hardEmptyCaseItem, neededInventories, hardQuestsInventories, LoadQuests.getHardQuests());
     }
 
     /**
@@ -111,7 +112,7 @@ public class CategorizedQuestsInterfaces {
                 if (inv.getItem(j) == null) inv.setItem(j, emptyCaseItem);
             }
         }
-        logger.info(ChatColor.GREEN + "Categorized quests interfaces successfully loaded.");
+        PluginLogger.info(ChatColor.GREEN + "Categorized quests interfaces successfully loaded.");
     }
 
     /**
@@ -176,5 +177,14 @@ public class CategorizedQuestsInterfaces {
      */
     public Inventory getInterfacePreviousPage(List<Inventory> inventories, int page) {
         return inventories.get(page - 2);
+    }
+
+    /**
+     * Get empty case item material.
+     *
+     * @return material.
+     */
+    public static List<ItemStack> getEmptyCaseItems() {
+        return emptyCaseItems;
     }
 }

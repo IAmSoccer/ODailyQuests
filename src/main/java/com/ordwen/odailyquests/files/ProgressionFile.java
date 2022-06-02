@@ -1,15 +1,14 @@
 package com.ordwen.odailyquests.files;
 
 import com.ordwen.odailyquests.ODailyQuests;
+import com.ordwen.odailyquests.tools.PluginLogger;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.PluginLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
 
 public class ProgressionFile {
 
@@ -26,25 +25,22 @@ public class ProgressionFile {
         this.oDailyQuests = oDailyQuests;
     }
 
-    /* Logger for stacktrace */
-    Logger logger = PluginLogger.getLogger("O'DailyQuests");
-
-    private File progressionFile;
-    private FileConfiguration progression;
+    private static File progressionFile;
+    private static FileConfiguration progression;
 
     /**
      * Get the configuration file.
      * @return config file.
      */
-    public FileConfiguration getProgressionFileConfiguration() {
-        return this.progression;
+    public static FileConfiguration getProgressionFileConfiguration() {
+        return progression;
     }
 
     /**
      * Get the file.
      * @return file.
      */
-    public File getProgressionFile() { return this.progressionFile; }
+    public static File getProgressionFile() { return progressionFile; }
 
     /**
      * Init progression file.
@@ -55,7 +51,7 @@ public class ProgressionFile {
 
         if (!progressionFile.exists()) {
             oDailyQuests.saveResource("progression.yml", false);
-            logger.info(ChatColor.GREEN + "Progression file created (YAML).");
+            PluginLogger.info(ChatColor.GREEN + "Progression file created (YAML).");
         }
 
         progression = new YamlConfiguration();
@@ -63,10 +59,10 @@ public class ProgressionFile {
         try {
             progression.load(progressionFile);
         } catch (InvalidConfigurationException | IOException e) {
-            logger.info(ChatColor.RED + "An error occurred on the load of the progression file.");
-            logger.info(ChatColor.RED + "Please inform the developer.");
+            PluginLogger.info(ChatColor.RED + "An error occurred on the load of the progression file.");
+            PluginLogger.info(ChatColor.RED + "Please inform the developer.");
             e.printStackTrace();
         }
-        logger.info(ChatColor.GREEN + "Progression file successfully loaded (YAML).");
+        PluginLogger.info(ChatColor.GREEN + "Progression file successfully loaded (YAML).");
     }
 }

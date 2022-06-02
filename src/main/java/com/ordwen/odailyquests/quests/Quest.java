@@ -1,8 +1,6 @@
 package com.ordwen.odailyquests.quests;
 
 import com.ordwen.odailyquests.rewards.Reward;
-import net.citizensnpcs.trait.VillagerProfession;
-import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Villager;
 import org.bukkit.inventory.ItemStack;
@@ -23,6 +21,24 @@ public class Quest {
     Villager.Profession villagerProfession;
     int villagerLevel;
     Reward reward;
+
+    /**
+     * Quest constructor (for global type).
+     * @param questName name of the quest.
+     * @param questDesc description of the quest.
+     * @param questType type of the quest.
+     * @param amountRequired required amount of the item.
+     * @param reward reward of the quest.
+     */
+    public Quest(int questIndex, String questName, List<String> questDesc, QuestType questType, ItemStack menuItem, int amountRequired, Reward reward) {
+        this.questIndex = questIndex;
+        this.questName = questName;
+        this.questDesc = questDesc;
+        this.questType = questType;
+        this.menuItem = menuItem;
+        this.amountRequired = amountRequired;
+        this.reward = reward;
+    }
 
     /**
      * Quest constructor (for itemstack type).

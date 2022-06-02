@@ -1,8 +1,7 @@
 package com.ordwen.odailyquests.commands;
 
-import com.ordwen.odailyquests.commands.interfaces.CategorizedQuestsInterfaces;
-import com.ordwen.odailyquests.commands.interfaces.GlobalQuestsInterface;
-import com.ordwen.odailyquests.commands.interfaces.PlayerQuestsInterface;
+import com.ordwen.odailyquests.commands.interfaces.InterfacesManager;
+import com.ordwen.odailyquests.commands.interfaces.playerinterface.PlayerQuestsInterface;
 import com.ordwen.odailyquests.enums.QuestsMessages;
 import com.ordwen.odailyquests.enums.QuestsPermissions;
 import com.ordwen.odailyquests.files.ConfigurationFiles;
@@ -10,28 +9,23 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class PlayerCommands implements CommandExecutor {
 
     private final ConfigurationFiles configurationFiles;
-    private final GlobalQuestsInterface globalQuestsInterface;
-    private final CategorizedQuestsInterfaces categorizedQuestsInterfaces;
 
     /**
      * ConfigurationFiles class instance constructor.
      *
      * @param configurationFiles files class.
      */
-    public PlayerCommands(ConfigurationFiles configurationFiles,
-                          GlobalQuestsInterface globalQuestsInterface,
-                          CategorizedQuestsInterfaces categorizedQuestsInterfaces) {
+    public PlayerCommands(ConfigurationFiles configurationFiles) {
         this.configurationFiles = configurationFiles;
-        this.globalQuestsInterface = globalQuestsInterface;
-        this.categorizedQuestsInterfaces = categorizedQuestsInterfaces;
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, Command command, @NotNull String label, @NotNull String[] args) {
         if (command.getName().equalsIgnoreCase("dailyquests")) {
             if (sender instanceof Player) {
                 if (sender.hasPermission(QuestsPermissions.QUEST_USE.getPermission())) {
@@ -42,8 +36,10 @@ public class PlayerCommands implements CommandExecutor {
                                     if (args.length == 2) {
                                         switch (args[1]) {
                                             case "global":
-                                                if (sender.hasPermission(QuestsPermissions.QUESTS_SHOW_GLOBAL.getPermission())) {
-                                                    ((Player) sender).openInventory(globalQuestsInterface.getGlobalQuestsInterfaceFirstPage());
+                                                if (configurationFiles.getConfigFile().getInt("quests_mode") != 1) {
+                                                    sender.sendMessage(QuestsMessages.CATEGORIZED_ENABLED.toString());
+                                                } else if (sender.hasPermission(QuestsPermissions.QUESTS_SHOW_GLOBAL.getPermission())) {
+                                                    ((Player) sender).openInventory(InterfacesManager.getGlobalQuestsInterface().getGlobalQuestsInterfaceFirstPage());
                                                 } else sender.sendMessage(QuestsMessages.NO_PERMISSION_CATEGORY.toString());
                                                 break;
                                             case "easy":
@@ -51,7 +47,7 @@ public class PlayerCommands implements CommandExecutor {
                                                     sender.sendMessage(QuestsMessages.CATEGORIZED_DISABLED.toString());
                                                 } else {
                                                     if (sender.hasPermission(QuestsPermissions.QUESTS_SHOW_EASY.getPermission())) {
-                                                        ((Player) sender).openInventory(categorizedQuestsInterfaces.getEasyQuestsInterfaceFirstPage());
+                                                        ((Player) sender).openInventory(InterfacesManager.getCategorizedQuestsInterfaces().getEasyQuestsInterfaceFirstPage());
                                                     } else sender.sendMessage(QuestsMessages.NO_PERMISSION_CATEGORY.toString());
                                                 }
                                                 break;
@@ -60,7 +56,7 @@ public class PlayerCommands implements CommandExecutor {
                                                     sender.sendMessage(QuestsMessages.CATEGORIZED_DISABLED.toString());
                                                 } else {
                                                     if (sender.hasPermission(QuestsPermissions.QUESTS_SHOW_MEDIUM.getPermission())) {
-                                                        ((Player) sender).openInventory(categorizedQuestsInterfaces.getMediumQuestsInterfaceFirstPage());
+                                                        ((Player) sender).openInventory(InterfacesManager.getCategorizedQuestsInterfaces().getMediumQuestsInterfaceFirstPage());
                                                     } else sender.sendMessage(QuestsMessages.NO_PERMISSION_CATEGORY.toString());
                                                 }
                                                 break;
@@ -69,7 +65,7 @@ public class PlayerCommands implements CommandExecutor {
                                                     sender.sendMessage(QuestsMessages.CATEGORIZED_DISABLED.toString());
                                                 } else {
                                                     if (sender.hasPermission(QuestsPermissions.QUESTS_SHOW_HARD.getPermission())) {
-                                                        ((Player) sender).openInventory(categorizedQuestsInterfaces.getHardQuestsInterfaceFirstPage());
+                                                        ((Player) sender).openInventory(InterfacesManager.getCategorizedQuestsInterfaces().getHardQuestsInterfaceFirstPage());
                                                     } else sender.sendMessage(QuestsMessages.NO_PERMISSION_CATEGORY.toString());
                                                 }
                                                 break;

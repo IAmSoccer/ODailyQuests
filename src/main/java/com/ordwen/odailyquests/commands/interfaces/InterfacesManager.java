@@ -1,50 +1,43 @@
 package com.ordwen.odailyquests.commands.interfaces;
 
 import com.ordwen.odailyquests.commands.interfaces.pagination.Items;
+import com.ordwen.odailyquests.commands.interfaces.playerinterface.PlayerHead;
+import com.ordwen.odailyquests.commands.interfaces.playerinterface.PlayerQuestsInterface;
 import com.ordwen.odailyquests.files.ConfigurationFiles;
-import com.ordwen.odailyquests.quests.player.progression.ProgressionManager;
-import com.ordwen.odailyquests.quests.player.progression.ValidateVillagerTradeQuest;
+import com.ordwen.odailyquests.files.PlayerInterfaceFile;
 import com.ordwen.odailyquests.tools.ColorConvert;
+import com.ordwen.odailyquests.tools.PluginLogger;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Villager;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.Merchant;
-import org.bukkit.inventory.MerchantInventory;
-import org.bukkit.plugin.PluginLogger;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
 
 public class InterfacesManager implements Listener {
-
-    /* Logger for stacktrace */
-    private static final Logger logger = PluginLogger.getLogger("O'DailyQuests");
 
     /**
      * Getting instance of classes.
      */
     private final ConfigurationFiles configurationFiles;
-    private final GlobalQuestsInterface globalQuestsInterface;
-    private final CategorizedQuestsInterfaces categorizedQuestsInterfaces;
+    private static GlobalQuestsInterface globalQuestsInterface;
+    private static CategorizedQuestsInterfaces categorizedQuestsInterfaces;
+
+    private static String nextPageItemName;
+    private static String previousPageItemName;
+
 
     /**
      * Class instance constructor.
      *
      * @param configurationFiles configuration files class.
      */
-    public InterfacesManager(ConfigurationFiles configurationFiles,
-                             GlobalQuestsInterface globalQuestsInterface,
-                             CategorizedQuestsInterfaces categorizedQuestsInterfaces) {
+    public InterfacesManager(ConfigurationFiles configurationFiles) {
         this.configurationFiles = configurationFiles;
-        this.globalQuestsInterface = globalQuestsInterface;
-        this.categorizedQuestsInterfaces = categorizedQuestsInterfaces;
     }
 
     /* variables */
+    private static List<ItemStack> emptyCaseItems;
     private static String playerQuestsInventoryName;
     private static String globalQuestsInventoryName;
     private static String easyQuestsInventoryName;
@@ -52,91 +45,81 @@ public class InterfacesManager implements Listener {
     private static String hardQuestsInventoryName;
 
     /**
+     * Load all interfaces objects.
+     */
+    public void initAllObjects() {
+        new Items(configurationFiles).initItems();
+
+        initInventoryNames();
+        loadInterfaces();
+    }
+
+    /**
+     * Load all interfaces.
+     */
+    public void loadInterfaces() {
+        loadPlayerQuestsInterface();
+        loadQuestsInterfaces();
+    }
+
+    /**
+     * Load player quests interface.
+     */
+    public void loadPlayerQuestsInterface() {
+        new PlayerHead().initPlayerHead();
+        new PlayerQuestsInterface().loadPlayerQuestsInterface();
+
+        initEmptyCaseItems();
+    }
+
+    /**
+     * Load categorized quests interface.
+     */
+    public void loadQuestsInterfaces() {
+        initPaginationItemNames();
+
+        if (configurationFiles.getConfigFile().getInt("quests_mode") == 2) {
+            categorizedQuestsInterfaces = new CategorizedQuestsInterfaces(configurationFiles);
+            categorizedQuestsInterfaces.loadCategorizedInterfaces();
+        }
+        else {
+            globalQuestsInterface = new GlobalQuestsInterface(configurationFiles);
+            globalQuestsInterface.loadGlobalQuestsInterface();
+        }
+    }
+    /**
      * Init variables.
      */
     public void initInventoryNames() {
-        playerQuestsInventoryName = ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces.player_quests").getString(".inventory_name")));
+        playerQuestsInventoryName = ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(PlayerInterfaceFile.getPlayerInterfaceFileConfiguration().getConfigurationSection("player_interface").getString(".inventory_name")));
         globalQuestsInventoryName = ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces.global_quests").getString(".inventory_name")));
         easyQuestsInventoryName = ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces.easy_quests").getString(".inventory_name")));
         mediumQuestsInventoryName = ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces.medium_quests").getString(".inventory_name")));
         hardQuestsInventoryName = ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces.hard_quests").getString(".inventory_name")));
 
-        logger.info(ChatColor.GREEN + "Interfaces names successfully loaded.");
+        PluginLogger.info(ChatColor.GREEN + "Interfaces names successfully loaded.");
     }
 
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        // check if player is trading
-        if (event.getClickedInventory() != null
-                && event.getInventory().getType() == InventoryType.MERCHANT
-                && event.getSlotType() == InventoryType.SlotType.RESULT
-                && event.getCurrentItem() != null
-                && event.getCurrentItem().getType() != Material.AIR) {
-            MerchantInventory merchantInventory = (MerchantInventory) event.getClickedInventory();
-            if (event.getClickedInventory().getHolder() instanceof Villager villager) {
-                if (merchantInventory.getSelectedRecipe() != null) {
-                    ValidateVillagerTradeQuest.validateTradeQuestType(
-                            event.getWhoClicked().getName(),
-                            villager,
-                            merchantInventory.getSelectedRecipe(),
-                            event.getCurrentItem().getAmount());
-                }
-            }
-            return;
+    /**
+     * Init empty case items.
+     */
+    public void initEmptyCaseItems() {
+        emptyCaseItems = new ArrayList<>();
+        emptyCaseItems.addAll(PlayerQuestsInterface.getFillItems());
+        if (GlobalQuestsInterface.getEmptyCaseItem() != null) {
+            emptyCaseItems.add(GlobalQuestsInterface.getEmptyCaseItem());
         }
+        emptyCaseItems.addAll(CategorizedQuestsInterfaces.getEmptyCaseItems());
+    }
 
-        String inventoryName = event.getView().getTitle();
-        if (inventoryName.startsWith(playerQuestsInventoryName)
-                || inventoryName.startsWith(globalQuestsInventoryName)
-                || inventoryName.startsWith(easyQuestsInventoryName)
-                || inventoryName.startsWith(mediumQuestsInventoryName)
-                || inventoryName.startsWith(hardQuestsInventoryName)) {
-            event.setCancelled(true);
-
-            if (event.getCurrentItem() != null
-                    && !event.getCurrentItem().getType().equals(PlayerQuestsInterface.getEmptyCaseItem())
-                    && event.getClick().isLeftClick()
-                    && event.getSlot() < event.getView().getTopInventory().getSize()
-                    && !event.getSlotType().equals(InventoryType.SlotType.QUICKBAR)) {
-                if (event.getCurrentItem().getType() != Material.PLAYER_HEAD) {
-                    ProgressionManager.validateGetQuestType(event.getWhoClicked().getName(), event.getCurrentItem().getType());
-                } else if (!event.getCurrentItem().equals(Items.getPlayerHead((Player) event.getWhoClicked()))){
-                    int page = Integer.parseInt(inventoryName.substring(inventoryName.length() - 1));
-                    if (event.getCurrentItem().getItemMeta() != null) {
-                        if (event.getCurrentItem().getItemMeta().getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces").getString(".next_item_name"))))) {
-                            event.getWhoClicked().closeInventory();
-                            if (inventoryName.startsWith(globalQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(globalQuestsInterface.getGlobalQuestsNextPage(page));
-                            }
-                            else if (inventoryName.startsWith(easyQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(categorizedQuestsInterfaces.getInterfaceNextPage(categorizedQuestsInterfaces.getEasyQuestsInventories(), page));
-                            }
-                            else if (inventoryName.startsWith(mediumQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(categorizedQuestsInterfaces.getInterfaceNextPage(categorizedQuestsInterfaces.getMediumQuestsInventories(), page));
-                            }
-                            else if (inventoryName.startsWith(hardQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(categorizedQuestsInterfaces.getInterfaceNextPage(categorizedQuestsInterfaces.getHardQuestsInventories(), page));
-                            }
-                        }
-                        if (event.getCurrentItem().getItemMeta().getDisplayName().equals(ChatColor.translateAlternateColorCodes('&', ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces").getString(".previous_item_name"))))) {
-                            event.getWhoClicked().closeInventory();
-                            if (inventoryName.startsWith(globalQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(globalQuestsInterface.getGlobalQuestsPreviousPage(page));
-                            }
-                            else if (inventoryName.startsWith(easyQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(categorizedQuestsInterfaces.getInterfacePreviousPage(categorizedQuestsInterfaces.getEasyQuestsInventories(), page));
-                            }
-                            else if (inventoryName.startsWith(mediumQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(categorizedQuestsInterfaces.getInterfacePreviousPage(categorizedQuestsInterfaces.getMediumQuestsInventories(), page));
-                            }
-                            else if (inventoryName.startsWith(hardQuestsInventoryName)) {
-                                event.getWhoClicked().openInventory(categorizedQuestsInterfaces.getInterfacePreviousPage(categorizedQuestsInterfaces.getHardQuestsInventories(), page));
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    /**
+     * Init pagination item names.
+     */
+    public void initPaginationItemNames() {
+        nextPageItemName = ChatColor.translateAlternateColorCodes('&',
+                ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces").getString(".next_item_name")));
+        previousPageItemName = ChatColor.translateAlternateColorCodes('&',
+                ColorConvert.convertColorCode(configurationFiles.getConfigFile().getConfigurationSection("interfaces").getString(".previous_item_name")));
     }
 
     public static String getPlayerQuestsInventoryName() {
@@ -158,6 +141,11 @@ public class InterfacesManager implements Listener {
     public static String getHardQuestsInventoryName() {
         return hardQuestsInventoryName;
     }
+    public static CategorizedQuestsInterfaces getCategorizedQuestsInterfaces() { return  categorizedQuestsInterfaces; }
+    public static GlobalQuestsInterface getGlobalQuestsInterface() { return globalQuestsInterface; }
+    public static List<ItemStack> getEmptyCaseItems() { return emptyCaseItems; }
+    public static String getNextPageItemName() { return nextPageItemName; }
+    public static String getPreviousPageItemName() { return previousPageItemName; }
 }
 
 

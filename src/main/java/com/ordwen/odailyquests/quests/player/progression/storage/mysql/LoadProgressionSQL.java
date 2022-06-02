@@ -1,20 +1,20 @@
 package com.ordwen.odailyquests.quests.player.progression.storage.mysql;
 
+import com.ordwen.odailyquests.ODailyQuests;
 import com.ordwen.odailyquests.enums.QuestsMessages;
 import com.ordwen.odailyquests.quests.Quest;
 import com.ordwen.odailyquests.quests.player.PlayerQuests;
 import com.ordwen.odailyquests.quests.player.progression.Progression;
 import com.ordwen.odailyquests.quests.player.progression.Utils;
+import com.ordwen.odailyquests.tools.PluginLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.plugin.PluginLogger;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.logging.Logger;
 
 public class LoadProgressionSQL {
 
@@ -30,9 +30,6 @@ public class LoadProgressionSQL {
         this.mySqlManager = mySqlManager;
     }
 
-    /* init variables */
-    private static final Logger logger = PluginLogger.getLogger("O'DailyQuests");
-
     /**
      * Load player quests progression.
      *
@@ -41,49 +38,52 @@ public class LoadProgressionSQL {
     public void loadProgression(String playerName, HashMap<String, PlayerQuests> activeQuests, int questsConfigMode, int timestampConfigMode, int temporalityMode) {
 
         HashMap<Quest, Progression> quests = new HashMap<>();
-        long timestamp = 0;
-        int achievedQuests = 0;
-        boolean hasStoredData = false;
 
-        try {
-            Connection connection = mySqlManager.getConnection();
-            String getTimestampQuery = "SELECT PLAYERTIMESTAMP,ACHIEVEDQUESTS FROM PLAYER WHERE PLAYERNAME = '" + playerName + "'";
-            PreparedStatement preparedStatement = connection.prepareStatement(getTimestampQuery);
+        Bukkit.getScheduler().runTaskAsynchronously(ODailyQuests.INSTANCE, () -> {
+            boolean hasStoredData = false;
+            long timestamp = 0;
+            int achievedQuests = 0;
 
-            ResultSet resultSet = preparedStatement.executeQuery();
+            try {
+                Connection connection = mySqlManager.getConnection();
+                String getTimestampQuery = "SELECT PLAYERTIMESTAMP,ACHIEVEDQUESTS FROM PLAYER WHERE PLAYERNAME = '" + playerName + "'";
+                PreparedStatement preparedStatement = connection.prepareStatement(getTimestampQuery);
 
-            if (resultSet.next()) {
-                hasStoredData = true;
-                timestamp = resultSet.getLong("PLAYERTIMESTAMP");
-                achievedQuests = resultSet.getInt("ACHIEVEDQUESTS");
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    hasStoredData = true;
+                    timestamp = resultSet.getLong("PLAYERTIMESTAMP");
+                    achievedQuests = resultSet.getInt("ACHIEVEDQUESTS");
+                }
+
+                connection.close();
+                resultSet.close();
+                preparedStatement.close();
+
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
 
-            connection.close();
-            resultSet.close();
-            preparedStatement.close();
+            if (hasStoredData) {
+                if (Utils.checkTimestamp(timestampConfigMode, temporalityMode, timestamp)) {
+                    Utils.loadNewPlayerQuests(playerName, activeQuests, timestampConfigMode, quests);
+                }
+                else {
+                    loadPlayerQuests(playerName, questsConfigMode, quests);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+                    PlayerQuests playerQuests = new PlayerQuests(timestamp, quests);
+                    playerQuests.setAchievedQuests(achievedQuests);
 
-        if (hasStoredData) {
-            if (Utils.checkTimestamp(timestampConfigMode, temporalityMode, timestamp)) {
+                    activeQuests.put(playerName, playerQuests);
+
+                    PluginLogger.info(ChatColor.GOLD + playerName + ChatColor.YELLOW + "'s quests have been loaded.");
+                    Bukkit.getPlayer(playerName).sendMessage(QuestsMessages.QUESTS_IN_PROGRESS.toString());
+                }
+            } else {
                 Utils.loadNewPlayerQuests(playerName, activeQuests, timestampConfigMode, quests);
             }
-            else {
-                loadPlayerQuests(playerName, questsConfigMode, quests);
-
-                PlayerQuests playerQuests = new PlayerQuests(timestamp, quests);
-                playerQuests.setAchievedQuests(achievedQuests);
-
-                activeQuests.put(playerName, playerQuests);
-
-                logger.info(ChatColor.GOLD + playerName + ChatColor.YELLOW + "'s quests have been loaded.");
-                Bukkit.getPlayer(playerName).sendMessage(QuestsMessages.QUESTS_IN_PROGRESS.toString());
-            }
-        } else {
-            Utils.loadNewPlayerQuests(playerName, activeQuests, timestampConfigMode, quests);
-        }
+        });
     }
 
     /**

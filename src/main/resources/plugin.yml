@@ -5,15 +5,8 @@ api-version: 1.16
 prefix: "O'DailyQuests"
 authors: [ Ordwen ]
 description: Add more objectives and dynamize your server !
-website: ordwen.com
-softdepend:
-  - Vault
-  - TokenManager
-  - Citizens
-  - PlaceholderAPI
-  - PlayerPoints
-loadbefore:
-  - Vault
+website: https://www.spigotmc.org/resources/odailyquests-daily-quests-plugin-1-16-1-18.100990/
+softdepend: [Vault, TokenManager, Citizens, PlaceholderAPI, PlayerPoints, MythicMobs, EliteMobs, HolographicDisplays]
 commands:
   dailyquests:
     description: default player command
@@ -24,8 +17,3 @@ commands:
     aliases:
       - dailyquestadmin
       - dqadmin
-  dailyquestsreload:
-    description: reload command
-    aliases:
-      - dailyquestreload
-      - dqreload
