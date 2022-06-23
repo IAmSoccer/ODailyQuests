@@ -4,7 +4,7 @@ import com.ordwen.odailyquests.quests.Quest;
 import com.ordwen.odailyquests.quests.player.progression.Progression;
 import com.ordwen.odailyquests.configuration.functionalities.GlobalReward;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class PlayerQuests {
 
@@ -12,14 +12,16 @@ public class PlayerQuests {
     private final Long timestamp;
 
     private int achievedQuests;
+    private int totalAchievedQuests;
 
     /* Quest active quest, Boolean quest status */
-    private final HashMap<Quest, Progression> playerQuests;
+    private final LinkedHashMap<Quest, Progression> playerQuests;
 
-    public PlayerQuests(Long timestamp, HashMap<Quest, Progression> playerQuests) {
+    public PlayerQuests(Long timestamp, LinkedHashMap<Quest, Progression> playerQuests) {
         this.timestamp = timestamp;
         this.playerQuests = playerQuests;
         this.achievedQuests = 0;
+        this.totalAchievedQuests = 0;
     }
 
     /**
@@ -35,6 +37,7 @@ public class PlayerQuests {
      */
     public void increaseAchievedQuests(String playerName) {
         this.achievedQuests++;
+        this.totalAchievedQuests++;
 
         if (this.achievedQuests == 3) {
             GlobalReward.sendGlobalReward(playerName);
@@ -45,6 +48,8 @@ public class PlayerQuests {
         this.achievedQuests = i;
     }
 
+    public void setTotalAchievedQuests(int i) { this.totalAchievedQuests = i; }
+
     /**
      * Get number of achieved quests.
      */
@@ -53,10 +58,17 @@ public class PlayerQuests {
     }
 
     /**
+     * Get total number of achieved quests.
+     */
+    public int getTotalAchievedQuests() {
+        return this.totalAchievedQuests;
+    }
+
+    /**
      * Get player quests.
      * @return player quests.
      */
-    public HashMap<Quest, Progression> getPlayerQuests() {
+    public LinkedHashMap<Quest, Progression> getPlayerQuests() {
         return this.playerQuests;
     }
 

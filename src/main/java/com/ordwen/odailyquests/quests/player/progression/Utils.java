@@ -12,6 +12,7 @@ import com.ordwen.odailyquests.tools.PluginLogger;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
@@ -72,7 +73,7 @@ public class Utils {
      * @param activeQuests        all active quests.
      * @param timestampConfigMode timestamp mode.
      */
-    public static void loadNewPlayerQuests(String playerName, HashMap<String, PlayerQuests> activeQuests, int timestampConfigMode, HashMap<Quest, Progression> quests) {
+    public static void loadNewPlayerQuests(String playerName, HashMap<String, PlayerQuests> activeQuests, int timestampConfigMode, LinkedHashMap<Quest, Progression> quests) {
 
         activeQuests.remove(playerName);
         QuestsManager.selectRandomQuests(quests);
@@ -107,17 +108,12 @@ public class Utils {
         if (questsConfigMode == 1) {
             quest = getQuestAtIndex(LoadQuests.getGlobalQuests(), questIndex, playerName);
         } else if (questsConfigMode == 2) {
-            switch (id) {
-                case 1:
-                    quest = getQuestAtIndex(LoadQuests.getEasyQuests(), questIndex, playerName);
-                    break;
-                case 2:
-                    quest = getQuestAtIndex(LoadQuests.getMediumQuests(), questIndex, playerName);
-                    break;
-                case 3:
-                    quest = getQuestAtIndex(LoadQuests.getHardQuests(), questIndex, playerName);
-                    break;
-            }
+            quest = switch (id) {
+                case 1 -> getQuestAtIndex(LoadQuests.getEasyQuests(), questIndex, playerName);
+                case 2 -> getQuestAtIndex(LoadQuests.getMediumQuests(), questIndex, playerName);
+                case 3 -> getQuestAtIndex(LoadQuests.getHardQuests(), questIndex, playerName);
+                default -> null;
+            };
         } else
             PluginLogger.error(ChatColor.RED + "Impossible to load player quests. The selected mode is incorrect.");
 

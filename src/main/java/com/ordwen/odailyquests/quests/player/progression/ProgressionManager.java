@@ -3,6 +3,7 @@ package com.ordwen.odailyquests.quests.player.progression;
 import com.ordwen.odailyquests.configuration.essentials.Synchronization;
 import com.ordwen.odailyquests.configuration.functionalities.DisabledWorlds;
 import com.ordwen.odailyquests.configuration.functionalities.SpawnersProgression;
+import com.ordwen.odailyquests.configuration.functionalities.TakeItems;
 import com.ordwen.odailyquests.enums.QuestsMessages;
 import com.ordwen.odailyquests.quests.Quest;
 import com.ordwen.odailyquests.quests.QuestType;
@@ -21,10 +22,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.*;
-import org.bukkit.event.player.PlayerBucketFillEvent;
-import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.player.PlayerShearEntityEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.*;
 
 import java.util.HashMap;
@@ -58,7 +56,13 @@ public class ProgressionManager implements Listener {
 
     @EventHandler
     public void onCraftItemEvent(CraftItemEvent event) {
-        ItemStack test = event.getRecipe().getResult().clone();
+
+        ItemStack test;
+
+        if (event.getRecipe() instanceof ComplexRecipe complexRecipe) {
+            test = new ItemStack(Material.valueOf(complexRecipe.getKey().getKey().toUpperCase()));
+        } else test = event.getRecipe().getResult().clone();
+
         ClickType click = event.getClick();
 
         int recipeAmount = test.getAmount();
@@ -151,12 +155,13 @@ public class ProgressionManager implements Listener {
 
     @EventHandler
     public void onEntityBreadEvent(EntityBreedEvent event) {
-        assert event.getBreeder() instanceof Player;
-        setPlayerQuestProgression(event.getBreeder().getName(), null, event.getEntityType(), null, 1, QuestType.BREED);
+        if (event.getBreeder() != null && event.getBreeder() instanceof Player) {
+            setPlayerQuestProgression(event.getBreeder().getName(), null, event.getEntityType(), null, 1, QuestType.BREED);
+        }
     }
 
     @EventHandler
-    public void onBrewEvent(PlayerShearEntityEvent event) {
+    public void onShearEvent(PlayerShearEntityEvent event) {
         setPlayerQuestProgression(event.getPlayer().getName(), null, event.getEntity().getType(), null, 1, QuestType.SHEAR);
     }
 
@@ -165,6 +170,17 @@ public class ProgressionManager implements Listener {
         if (event.getItemStack().getType() == Material.MILK_BUCKET) {
             setPlayerQuestProgression(event.getPlayer().getName(), null, null, null, 1, QuestType.MILKING);
         }
+    }
+
+    @EventHandler
+    public void onPlayerExpChangeEvent(PlayerExpChangeEvent event) {
+        setPlayerQuestProgression(event.getPlayer().getName(), null, null, null, event.getAmount(), QuestType.EXP_POINTS);
+    }
+
+    @EventHandler
+    public void onPlayerLevelChangeEvent(PlayerLevelChangeEvent event) {
+        final int diff = event.getNewLevel() - event.getOldLevel();
+        if (diff > 0) setPlayerQuestProgression(event.getPlayer().getName(), null, null, null, diff, QuestType.EXP_LEVELS);
     }
 
     /**
@@ -184,7 +200,7 @@ public class ProgressionManager implements Listener {
                 Progression questProgression = playerQuests.get(quest);
                 if (!questProgression.isAchieved() && quest.getType() == type) {
                     boolean isRequiredItem = false;
-                    if (type == QuestType.MILKING) {
+                    if (type == QuestType.MILKING || type == QuestType.EXP_POINTS || type == QuestType.EXP_LEVELS) {
                         isRequiredItem = true;
                     } else if (type == QuestType.KILL
                             || type == QuestType.BREED
@@ -223,9 +239,10 @@ public class ProgressionManager implements Listener {
                             QuestsManager.getActiveQuests().get(playerName).increaseAchievedQuests(playerName);
                             RewardManager.sendAllRewardItems(quest.getQuestName(), playerName, quest.getReward());
                         }
-                    }
-                    if (!Synchronization.isSynchronised()) {
-                        break;
+
+                        if (!Synchronization.isSynchronised()) {
+                            break;
+                        }
                     }
                 }
             }
@@ -252,6 +269,13 @@ public class ProgressionManager implements Listener {
                         if (getAmount(playerInventory, quest.getItemRequired()) >= quest.getAmountRequired()) {
                             questProgression.isAchieved = true;
                             QuestsManager.getActiveQuests().get(playerName).increaseAchievedQuests(playerName);
+
+                            if (TakeItems.isTakeItemsEnabled()) {
+                                final ItemStack toRemove = quest.getItemRequired().clone();
+                                toRemove.setAmount(quest.getAmountRequired());
+                                Bukkit.getPlayer(playerName).getInventory().removeItem(toRemove);
+                            }
+
                             Bukkit.getPlayer(playerName).closeInventory();
                             RewardManager.sendAllRewardItems(quest.getQuestName(), playerName, quest.getReward());
                         } else {

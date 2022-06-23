@@ -20,11 +20,14 @@ import com.ordwen.odailyquests.quests.player.progression.storage.yaml.SaveProgre
 import com.ordwen.odailyquests.quests.player.progression.storage.mysql.LoadProgressionSQL;
 import com.ordwen.odailyquests.quests.player.progression.storage.mysql.MySQLManager;
 import com.ordwen.odailyquests.quests.player.progression.storage.mysql.SaveProgressionSQL;
+import com.ordwen.odailyquests.tools.TimerTask;
 import com.ordwen.odailyquests.tools.UpdateChecker;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import com.ordwen.odailyquests.tools.PluginLogger;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.time.LocalDateTime;
 
 public final class ODailyQuests extends JavaPlugin {
 
@@ -37,8 +40,10 @@ public final class ODailyQuests extends JavaPlugin {
     public ConfigurationManager configurationManager;
     public InterfacesManager interfacesManager;
     public FilesManager filesManager;
+    private MySQLManager mySqlManager;
     private LoadProgressionSQL loadProgressionSQL = null;
     private SaveProgressionSQL saveProgressionSQL = null;
+    private TimerTask timerTask;
 
     @Override
     public void onEnable() {
@@ -60,7 +65,7 @@ public final class ODailyQuests extends JavaPlugin {
 
         /* Load SQL Support */
         if (configurationFiles.getConfigFile().getString("storage_mode").equals("MySQL")) {
-            MySQLManager mySqlManager = new MySQLManager(configurationFiles, 10);
+            mySqlManager = new MySQLManager(configurationFiles, 10);
             this.loadProgressionSQL = new LoadProgressionSQL(mySqlManager);
             this.saveProgressionSQL = new SaveProgressionSQL(mySqlManager);
 
@@ -136,11 +141,16 @@ public final class ODailyQuests extends JavaPlugin {
             PluginLogger.error("You should restart the server instead.");
         }
 
+        /* Init delayed task to draw new quests */
+        timerTask = new TimerTask(LocalDateTime.now());
+
         PluginLogger.info(ChatColor.GREEN + "Plugin is started !");
     }
 
     @Override
     public void onDisable() {
+
+        timerTask.stop();
 
         /* Avoid server/plugin reload errors */
         if (getServer().getOnlinePlayers().size() > 0) {
@@ -162,6 +172,8 @@ public final class ODailyQuests extends JavaPlugin {
                     break;
             }
         }
+
+        mySqlManager.close();
 
         PluginLogger.info(ChatColor.RED + "Plugin is shutting down...");
     }

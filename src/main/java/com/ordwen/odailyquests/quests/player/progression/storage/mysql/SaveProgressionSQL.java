@@ -13,7 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.logging.Logger;
+import java.util.LinkedHashMap;
 
 public class SaveProgressionSQL {
 
@@ -41,7 +41,8 @@ public class SaveProgressionSQL {
         PlayerQuests playerQuests = activeQuests.get(playerName);
         long timestamp = playerQuests.getTimestamp();
         int achievedQuests = playerQuests.getAchievedQuests();
-        HashMap<Quest, Progression> quests = playerQuests.getPlayerQuests();
+        int totalAchievedQuests = playerQuests.getTotalAchievedQuests();
+        LinkedHashMap<Quest, Progression> quests = playerQuests.getPlayerQuests();
 
         Connection connection = mySqlManager.getConnection();
 
@@ -56,7 +57,7 @@ public class SaveProgressionSQL {
                     PluginLogger.info(ChatColor.GOLD + playerName + ChatColor.YELLOW + " detected into database.");
 
                     String query = "UPDATE PLAYER\n" +
-                            "SET PLAYERTIMESTAMP = " + timestamp + ", ACHIEVEDQUESTS = " + achievedQuests + "\n" +
+                            "SET PLAYERTIMESTAMP = " + timestamp + ", ACHIEVEDQUESTS = " + achievedQuests + ", TOTALACHIEVEDQUESTS = " + totalAchievedQuests + "\n" +
                             "WHERE PLAYERNAME = '" + playerName + "'"
                             ;
                     connection.prepareStatement(query).execute();
@@ -74,7 +75,7 @@ public class SaveProgressionSQL {
 
                     String query = "INSERT INTO PLAYER\n" +
                             "VALUES\n" +
-                            "('" + playerName + "', " + timestamp + ", " + achievedQuests + ")";
+                            "('" + playerName + "', " + timestamp + ", " + achievedQuests + ", " + totalAchievedQuests + ")";
 
                     connection.prepareStatement(query).execute();
 

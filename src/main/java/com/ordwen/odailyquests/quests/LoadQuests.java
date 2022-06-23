@@ -141,7 +141,7 @@ public class LoadQuests {
 
                     switch(questType) {
                         /* type that does not require a specific entity/item */
-                        case MILKING -> {
+                        case MILKING, EXP_POINTS, EXP_LEVELS -> {
                             isGlobalType = true;
                         }
                         /* type that require a custom mob */
@@ -158,7 +158,7 @@ public class LoadQuests {
                             } else isGlobalType = true;
                         }
                         /* types that requires an item */
-                        case BREAK, PLACE, CRAFT, PICKUP, LAUNCH, CONSUME, GET, COOK, ENCHANT, VILLAGER_TRADE -> {
+                        case BREAK, PLACE, CRAFT, PICKUP, LAUNCH, CONSUME, GET, COOK, ENCHANT, VILLAGER_TRADE, FISH -> {
                             if (file.getConfigurationSection("quests." + fileQuest).contains(".required_item")) {
                                 String itemType = file.getConfigurationSection("quests." + fileQuest).getString(".required_item");
                                 /* check if the required item is a custom item */
@@ -204,7 +204,7 @@ public class LoadQuests {
                     /* init quest */
                     if (isGlobalType) {
                         if (questType == QuestType.VILLAGER_TRADE) {
-
+                            quest = new Quest(questIndex, questName, questDesc, questType, menuItem, requiredAmount, profession, villagerLevel, reward);
                         }
                         else quest = new Quest(questIndex, questName, questDesc, questType, menuItem, requiredAmount, reward);
                     }
